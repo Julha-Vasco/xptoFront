@@ -2,36 +2,28 @@
   <div class="form-container">
     <h1>Pré-cadastro de Filial</h1>
     <form @submit.prevent="submitForm">
-      <!-- Campo Código -->
+
       <div class="form-group">
         <label for="codigo">Código <span class="required">*</span></label>
-        <input type="text" id="codigo" v-model="codigo" :class="{ 'error-border': errors.codigo }" placeholder="Digite o código" required>
+        <input type="text" id="codigo" v-model="codigo" :class="{ 'error-border': errors.codigo }" placeholder="Digite o código da filial" required>
         <span v-if="errors.codigo" class="error-msg">{{ errors.codigo }}</span>
       </div>
 
-      <!-- Campo Nome -->
       <div class="form-group">
-        <label for="nome">Nome <span class="required">*</span></label>
-        <input type="text" id="nome" v-model="nome" :class="{ 'error-border': errors.nome }" placeholder="Digite o nome" required>
+        <label for="nome">Nome filial <span class="required">*</span></label>
+        <input type="text" id="nome" v-model="nome" :class="{ 'error-border': errors.nome }" placeholder="Digite o nome da filial" required>
         <span v-if="errors.nome" class="error-msg">{{ errors.nome }}</span>
       </div>
 
-      <!-- Campo Endereço -->
       <div class="form-group">
         <label for="endereco">Endereço <span class="required">*</span></label>
         <input type="text" id="endereco" v-model="endereco" :class="{ 'error-border': errors.endereco }" placeholder="Digite o endereço" required>
         <span v-if="errors.endereco" class="error-msg">{{ errors.endereco }}</span>
       </div>
 
-      <!-- Zoom Usuário Responsável Almoxarifado -->
       <div class="form-group">
         <label for="responsavel">Responsável Almoxarifado <span class="required">*</span></label>
-        <select id="responsavel" v-model="responsavel" :class="{ 'error-border': errors.responsavel }" required>
-          <option disabled value="">Selecione o responsável</option>
-          <option v-for="usuario in usuarios" :key="usuario.id" :value="usuario.nome">
-            {{ usuario.nome }}
-          </option>
-        </select>
+        <input type="text" id="responsavel" v-model="responsavel" :class="{ 'error-border': errors.responsavel }" placeholder="Digite o código do responsável" required>
         <span v-if="errors.responsavel" class="error-msg">{{ errors.responsavel }}</span>
       </div>
 
@@ -41,6 +33,8 @@
 </template>
 
 <script>
+import { FilialService } from '../service/preCadservice'; 
+
 export default {
   name: "FormPreCad",
   data() {
@@ -49,44 +43,34 @@ export default {
       nome: "",
       endereco: "",
       responsavel: "",
-      usuarios: [
-        { id: 1, nome: "Maria Silva" },
-        { id: 2, nome: "João Pereira" },
-        { id: 3, nome: "Ana Souza" },
-      ],
-      registrosCadastrados: [{ codigo: "123" }, { codigo: "456" }], // Exemplo de registros já cadastrados
       errors: {},
     };
   },
   methods: {
     validateForm() {
       this.errors = {};
-
-      if (this.registrosCadastrados.some(registro => registro.codigo === this.codigo)) {
-        this.errors.codigo = "O código já está cadastrado.";
-      }
-
-      
-      if (!this.codigo) {
-        this.errors.codigo = "O campo código é obrigatório.";
-      }
-      if (!this.nome) {
-        this.errors.nome = "O campo nome é obrigatório.";
-      }
-      if (!this.endereco) {
-        this.errors.endereco = "O campo endereço é obrigatório.";
-      }
-      if (!this.responsavel) {
-        this.errors.responsavel = "O campo responsável é obrigatório.";
-      }
-
+     
+      if (!this.codigo) this.errors.codigo = "O campo código é obrigatório.";
+      if (!this.nome) this.errors.nome = "O campo nome é obrigatório.";
+      if (!this.endereco) this.errors.endereco = "O campo endereço é obrigatório.";
+      if (!this.responsavel) this.errors.responsavel = "O campo responsável é obrigatório.";
       return Object.keys(this.errors).length === 0;
     },
-    submitForm() {
+    async submitForm() {
       if (this.validateForm()) {
-        // Aqui você pode fazer a chamada para o back-end para cadastrar o novo registro
-        alert("Formulário enviado com sucesso!");
-        this.limparFormulario();
+        const newFilial = {
+          codigo: this.codigo,
+          nome: this.nome,
+          endereco: this.endereco,
+          responsavel: this.responsavel,
+        };
+        try {
+          await FilialService.createFilial(newFilial);
+          alert("Filial cadastrada com sucesso!");
+          this.limparFormulario();
+        } catch (error) {
+          alert(`Erro ao cadastrar filial: ${error.message}`);
+        }
       }
     },
     limparFormulario() {
@@ -98,6 +82,8 @@ export default {
   }
 };
 </script>
+
+
 
 <style scoped>
 .form-container {

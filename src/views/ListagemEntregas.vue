@@ -5,40 +5,53 @@
       <router-link to="/solicitacao-entrega">Solicitação de Entrega</router-link>
       <router-link to="/confirmacao-entrega">Confirmação de Entrega</router-link>
     </nav>
-    <h1>Listagem de Entregas</h1>
-    <table class="entregas-table">
-      <thead>
-        <tr>
-          <th>ID</th>
-          <th>Destinatário</th>
-          <th>Endereço</th>
-          <th>Status</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr v-for="entrega in entregas" :key="entrega.id">
-          <td>{{ entrega.id }}</td>
-          <td>{{ entrega.destinatario }}</td>
-          <td>{{ entrega.endereco }}</td>
-          <td>{{ entrega.status }}</td>
-        </tr>
-      </tbody>
-    </table>
+    <div>
+      <h1>Listagem de Entregas</h1>
+      <table class="entregas-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Descrição da mercadoria</th>
+            <th>Filial destino</th>
+            <th>Prazo de entrega</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="entrega in entregas" :key="entrega.id">
+            <td>{{ entrega.id }}</td>
+            <td>{{ entrega.descricaoMercadoria }}</td>
+            <td>{{ entrega.filialDestino}}</td>
+            <td>{{ entrega.prazo }}</td>
+            <td>{{ entrega.status }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
   </div>
 </template>
 
 <script>
+import { buscarEntregas } from '../service/solicitacaoEntrega'; 
+
 export default {
   name: 'ListagemEntregas',
   data() {
     return {
-      entregas: [
-        { id: 1, destinatario: 'João Silva', endereco: 'Rua A, 123', status: 'Entregue' },
-        { id: 2, destinatario: 'Maria Oliveira', endereco: 'Rua B, 456', status: 'Pendente' },
-        { id: 3, destinatario: 'Carlos Pereira', endereco: 'Rua C, 789', status: 'Em trânsito' },
-        // Adicione mais entregas conforme necessário
-      ],
+      entregas: [], 
     };
+  },
+  created() {
+    this.fetchEntregas(); 
+  },
+  methods: {
+    async fetchEntregas() {
+      try {
+        this.entregas = await buscarEntregas(); 
+      } catch (error) {
+        console.error('Erro ao buscar entregas:', error);
+      }
+    },
   },
 };
 </script>
@@ -64,14 +77,15 @@ export default {
 .entregas-table {
   width: 100%;
   border-collapse: collapse;
-  margin-top: 50px; /* Espaço entre o nav e a tabela */
-  border-radius: 8px; /* Bordas arredondadas */
-  overflow: hidden; /* Para garantir que as bordas arredondadas apareçam */
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Sombra */
+  margin-top: 50px; 
+  margin-bottom: 80px; 
+  border-radius: 8px; 
+  overflow: hidden; 
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); 
 }
 
 .entregas-table th, .entregas-table td {
-  border: 1px solid #ccc; /* Borda da tabela */
+  border: 1px solid #ccc; 
   padding: 10px;
   text-align: left;
 }

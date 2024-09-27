@@ -1,18 +1,19 @@
 <template>
-  <div>
+  <div id="app">
     <Navbar :logo="logo_src" :alt="app_name" />
-    <div>
+    <div class="content">
       <router-view></router-view>
     </div>
     <Footer />
   </div>
 </template>
+
 <script>
 import Navbar from './components/Navbar'
 import Footer from './components/Footer'
 
 export default {
-  data: function() {
+  data() {
     return {
       logo_src: require('@/assets/logo.png'),
       app_name: "XPTO Inc"
@@ -26,22 +27,32 @@ export default {
 </script>
 
 <style>
-  * {
-    font-family: Helvetica;
-    padding: 0;
-    margin: 0;
-    box-sizing: border-box;
-  }
+#app {
+  display: flex; 
+  flex-direction: column; 
+  min-height: 100vh; 
+}
 
-  .main-container {
-    margin: 50px;
-    min-height: 250px;
-  }
+.content {
+  flex: 1; 
+}
 
-  h1 {
-    text-align: center;
-    font-size: 42px;
-    margin-bottom: 30px;
-    color: #222;
-  }
+* {
+  font-family: Helvetica;
+  padding: 0;
+  margin: 0;
+  box-sizing: border-box;
+}
+
+.main-container {
+  margin: 50px;
+  min-height: 250px;
+}
+
+h1 {
+  text-align: center;
+  font-size: 42px;
+  margin-bottom: 30px;
+  color: #222;
+}
 </style>

@@ -2,11 +2,11 @@
   <div class="form-container">
     <h1>Solicitação de Entrega</h1>
     <form @submit.prevent="submitForm">
- 
+
       <div class="form-group">
         <label for="cep-origem">CEP Origem <span class="required">*</span></label>
-        <input type="text" id="cep-origem" v-model="cepOrigem" :class="{ 'error-border': errors.cepOrigem }" placeholder="Digite o CEP" required @blur="buscarEndereco">
-        <span v-if="errors.cepOrigem" class="error-msg">{{ errors.cepOrigem }}</span>
+        <input type="text" id="cep-origem" v-model="cep" :class="{ 'error-border': errors.cep }" placeholder="Digite o CEP" required @blur="buscarEndereco">
+        <span v-if="errors.cep" class="error-msg">{{ errors.cep }}</span>
       </div>
 
       <div class="form-group">
@@ -28,15 +28,16 @@
         <label for="filial-destino">Filial Destino <span class="required">*</span></label>
         <select id="filial-destino" v-model="filialDestino" :class="{ 'error-border': errors.filialDestino }" required>
           <option disabled value="">Selecione a filial</option>
-          <option v-for="filial in filiais" :key="filial.id" :value="filial.id">{{ filial.nome }}</option>
+          <option v-for="filial in filiais" :key="filial.codigo" :value="filial.codigo">{{ filial.nome }}</option>
         </select>
         <span v-if="errors.filialDestino" class="error-msg">{{ errors.filialDestino }}</span>
       </div>
 
+
       <div class="form-group">
         <label for="prazo-entrega">Prazo da Entrega <span class="required">*</span></label>
-        <input type="date" id="prazo-entrega" v-model="prazoEntrega" @change="validarPrazo" :class="{ 'error-border': errors.prazoEntrega }" required>
-        <span v-if="errors.prazoEntrega" class="error-msg">{{ errors.prazoEntrega }}</span>
+        <input type="date" id="prazo-entrega" v-model="prazo" @change="validarPrazo" :class="{ 'error-border': errors.prazo }" required>
+        <span v-if="errors.prazo" class="error-msg">{{ errors.prazo }}</span>
       </div>
 
       <div class="form-group">
@@ -51,28 +52,26 @@
 </template>
 
 <script>
+import { buscarFiliais, criarEntrega } from '../service/solicitacaoEntrega';
+
 export default {
   name: "FormSolicitacaoEntrega",
   data() {
     return {
-      cepOrigem: "",
+      cep: "",
       rua: "",
       cidade: "",
       estado: "",
       filialDestino: "",
-      prazoEntrega: "",
+      prazo: "",
       descricaoMercadoria: "",
-      filiais: [
-        { id: 1, nome: "Filial A" },
-        { id: 2, nome: "Filial B" },
-        { id: 3, nome: "Filial C" },
-      ],
+      filiais: [],
       errors: {},
     };
   },
   methods: {
     buscarEndereco() {
-      const cep = this.cepOrigem.replace(/\D/g, '');
+      const cep = this.cep.replace(/\D/g, '');
       if (cep) {
         fetch(`https://viacep.com.br/ws/${cep}/json/`)
           .then(response => response.json())
@@ -81,31 +80,34 @@ export default {
               this.rua = data.logradouro;
               this.cidade = data.localidade;
               this.estado = data.uf;
-              this.errors.cepOrigem = null; 
+              this.errors.cep = null; 
             } else {
-              this.errors.cepOrigem = "CEP não encontrado.";
+              this.errors.cep = "CEP não encontrado.";
               this.limparEndereco();
             }
           })
           .catch(error => {
-            this.errors.cepOrigem = "Erro ao buscar CEP.";
+            console.error('Erro ao buscar CEP:', error); 
+            this.errors.cep = "Erro ao buscar CEP.";
             this.limparEndereco();
           });
       }
     },
+
     validarPrazo() {
       const dataAtual = new Date();
-      const dataPrazo = new Date(this.prazoEntrega);
+      const dataPrazo = new Date(this.prazo);
       if (dataPrazo < dataAtual) {
-        this.errors.prazoEntrega = "O prazo de entrega não pode ser anterior ou igual à data atual.";
+        this.errors.prazo = "O prazo de entrega não pode ser anterior ou igual à data atual.";
       } else {
-        this.errors.prazoEntrega = null; 
+        this.errors.prazo = null;
       }
     },
+
     validateForm() {
       this.errors = {};
-      if (!this.cepOrigem) {
-        this.errors.cepOrigem = "O campo CEP é obrigatório.";
+      if (!this.cep) {
+        this.errors.cep = "O campo CEP é obrigatório.";
       }
       if (!this.rua) {
         this.errors.rua = "O campo Rua é obrigatório.";
@@ -119,8 +121,8 @@ export default {
       if (!this.filialDestino) {
         this.errors.filialDestino = "O campo Filial é obrigatório.";
       }
-      if (!this.prazoEntrega) {
-        this.errors.prazoEntrega = "O campo Prazo de Entrega é obrigatório.";
+      if (!this.prazo) {
+        this.errors.prazo = "O campo Prazo de Entrega é obrigatório.";
       }
       if (!this.descricaoMercadoria) {
         this.errors.descricaoMercadoria = "O campo Descrição da Mercadoria é obrigatório.";
@@ -128,26 +130,58 @@ export default {
 
       return Object.keys(this.errors).length === 0;
     },
-    submitForm() {
-      if (this.validateForm()) {
-        alert("Formulário enviado com sucesso!");
-        this.limparFormulario();
+
+    async submitForm() {
+  if (this.validateForm()) {
+    const dadosEntrega = {
+      cep: this.cep,
+      rua: this.rua,
+      cidade: this.cidade,
+      estado: this.estado,
+      filialDestino: this.filialDestino,
+      prazo: this.prazo,
+      descricaoMercadoria: this.descricaoMercadoria,
+    };
+
+    console.log('Dados da Entrega:', dadosEntrega); 
+
+    try {
+      await criarEntrega(dadosEntrega);
+      alert('Entrega solicitada com sucesso!');
+      this.limparFormulario();
+    } catch (error) {
+      alert('Erro ao solicitar entrega.');
+    }
+  }
+}
+,
+
+    async carregarFiliais() {
+      try {
+        this.filiais = await buscarFiliais();
+      } catch (error) {
+        alert('Erro ao carregar as filiais.');
       }
     },
+
     limparEndereco() {
       this.rua = "";
       this.cidade = "";
       this.estado = "";
     },
+
     limparFormulario() {
-      this.cepOrigem = "";
+      this.cep = "";
       this.rua = "";
       this.cidade = "";
       this.estado = "";
       this.filialDestino = "";
-      this.prazoEntrega = "";
+      this.prazo = "";
       this.descricaoMercadoria = "";
     },
+  },
+  mounted() {
+    this.carregarFiliais(); 
   },
 };
 </script>
