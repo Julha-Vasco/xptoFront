@@ -13,6 +13,7 @@
             <th>ID</th>
             <th>Descrição da mercadoria</th>
             <th>Filial destino</th>
+            <th>Responsável</th> 
             <th>Prazo de entrega</th>
             <th>Status</th>
           </tr>
@@ -21,7 +22,8 @@
           <tr v-for="entrega in entregas" :key="entrega.id">
             <td>{{ entrega.id }}</td>
             <td>{{ entrega.descricaoMercadoria }}</td>
-            <td>{{ entrega.filialDestino}}</td>
+            <td>{{ entrega.filialDestino }}</td>
+            <td>{{ getResponsavel(entrega.filialDestino) }}</td> 
             <td>{{ entrega.prazo }}</td>
             <td>{{ entrega.status }}</td>
           </tr>
@@ -32,17 +34,19 @@
 </template>
 
 <script>
-import { buscarEntregas } from '../service/solicitacaoEntrega'; 
+import { buscarEntregas, buscarFiliais } from '../service/solicitacaoEntrega'; 
 
 export default {
   name: 'ListagemEntregas',
   data() {
     return {
       entregas: [], 
+      filiais: [], 
     };
   },
   created() {
     this.fetchEntregas(); 
+    this.fetchFiliais(); 
   },
   methods: {
     async fetchEntregas() {
@@ -52,6 +56,20 @@ export default {
         console.error('Erro ao buscar entregas:', error);
       }
     },
+
+    async fetchFiliais() {
+      try {
+        this.filiais = await buscarFiliais(); 
+      } catch (error) {
+        console.error('Erro ao buscar filiais:', error);
+      }
+    },
+
+    getResponsavel(filialCodigo) {
+      
+      const filial = this.filiais.find(f => f.codigo === filialCodigo);
+      return filial ? filial.responsavel : 'Desconhecido'; 
+    }
   },
 };
 </script>

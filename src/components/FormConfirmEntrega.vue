@@ -13,6 +13,16 @@
       </div>
 
       <div class="form-group">
+        <label for="responsavelAlmoxarifado">Responsável pelo Almoxarifado <span class="required">*</span></label>
+        <select id="responsavelAlmoxarifado" v-model="responsavelAlmoxarifado" :class="{ 'error-border': errors.responsavelAlmoxarifado }" required :disabled="!codigoFilial">
+          <option value="" disabled>Selecione um responsável</option>
+          <option v-for="responsavel in responsaveisFiltrados" :key="responsavel.id" :value="responsavel.id">{{ responsavel.nome }}</option>
+        </select>
+        <span v-if="responsaveisFiltrados.length === 0" class="error-msg">Nenhum responsável disponível.</span>
+        <span v-if="errors.responsavelAlmoxarifado" class="error-msg">{{ errors.responsavelAlmoxarifado }}</span>
+      </div>
+
+      <div class="form-group">
         <label for="idEntrega">ID da Entrega <span class="required">*</span></label>
         <select id="idEntrega" v-model="idEntrega" :class="{ 'error-border': errors.idEntrega }" required :disabled="!codigoFilial">
           <option value="" disabled>Selecione uma entrega</option>
@@ -35,9 +45,11 @@ export default {
     return {
       codigoFilial: "",
       idEntrega: "",
+      responsavelAlmoxarifado: "",
       errors: {},
       filiais: [],  
       entregas: [],
+      responsaveisFiltrados: [],
       entregasFiltradas: [] 
     };
   },
@@ -64,22 +76,32 @@ export default {
       }
     },
 
-    filterEntregas() {
-      if (this.codigoFilial) {
-        this.entregasFiltradas = this.entregas.filter(entrega => 
-          entrega.filialDestino === this.codigoFilial && entrega.status === 'PENDING'
-        );
-      } else {
-        this.entregasFiltradas = this.entregas.filter(entrega => entrega.status === 'PENDING'); 
-      }
-      this.idEntrega = ""; 
-    },
+   filterEntregas() {
+  if (this.codigoFilial) {
+    this.entregasFiltradas = this.entregas.filter(entrega => 
+      entrega.filialDestino === this.codigoFilial && entrega.status === 'PENDING'
+    );
+
+    const filialSelecionada = this.filiais.find(filial => filial.codigo === this.codigoFilial);
+    
+    this.responsaveisFiltrados = filialSelecionada ? [{ id: filialSelecionada.id, nome: filialSelecionada.responsavel }] : [];
+  } else {
+    this.entregasFiltradas = this.entregas.filter(entrega => entrega.status === 'PENDING');
+    this.responsaveisFiltrados = [];
+  }
+  this.idEntrega = "";
+  this.responsavelAlmoxarifado = "";
+},
+
 
     validateForm() {
       this.errors = {};
 
       if (!this.codigoFilial) {
         this.errors.codigoFilial = "O campo código da filial é obrigatório.";
+      }
+      if (!this.responsavelAlmoxarifado) {
+        this.errors.responsavelAlmoxarifado = "O campo responsável pelo almoxarifado é obrigatório.";
       }
       if (!this.idEntrega) {
         this.errors.idEntrega = "O campo ID da entrega é obrigatório.";
@@ -91,8 +113,8 @@ export default {
     async submitForm() {
       if (this.validateForm()) {
         try {
-          await atualizarEntrega(this.idEntrega);
-          alert(`Entrega confirmada! Código da Filial: ${this.codigoFilial}, ID da Entrega: ${this.idEntrega}`);
+          await atualizarEntrega(this.idEntrega, this.responsavelAlmoxarifado);
+          alert(`Entrega confirmada! Código da Filial: ${this.codigoFilial}, ID da Entrega: ${this.idEntrega}, Responsável: ${this.responsavelAlmoxarifado}`);
           this.limparFormulario();
         } catch (error) {
           console.error('Erro ao confirmar entrega:', error);
@@ -104,7 +126,9 @@ export default {
     limparFormulario() {
       this.codigoFilial = "";
       this.idEntrega = "";
+      this.responsavelAlmoxarifado = "";
       this.entregasFiltradas = []; 
+      this.responsaveisFiltrados = [];
     }
   }
 };
